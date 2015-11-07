@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Start Page</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/correctionCSS.css">
+    </head>
+    <body>
+        <div id="formFormat">
+        <h2>Welcome to the Corbin Foods Food Product Database</h2>
+        
+        <p>Enter your name to be logged into the Food Item Database</p>
+        
+        <form id="form1" name="form1" Method="POST" action="FoodItemController?action=list">
+                    <p>UserName:</p>
+                    <input type="text" name="userName" value="guest"/>
+                    <input class="btn btn-primary" type="submit" name="submit" value="submit"/>
+            <br>
+        </form>
+        <br>
+        </div>
+    </body>
+</html>
