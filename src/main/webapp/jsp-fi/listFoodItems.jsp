@@ -8,6 +8,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -26,9 +27,15 @@
                 <h1 id="title">Food Products List</h1>
                 <p>Current User: ${sessionScope.user}</p>
                 <p>Currently Active Sessions: ${sessions}</p>
+                
+                <sec:authorize access="hasAnyRole('ROLE_MGR')">
                 <form id="formInsert" method="POST" action="FoodItemController?action=insert">
                     <input class="btn btn-primary" type="submit" name="insert" value="Insert"/> 
                 </form>
+                </sec:authorize>
+                <br>
+                
+                <a class="btn btn-primary" href="index.html"/>Back</a> 
                 
             </div>
             <div class="col-md-1">
@@ -58,52 +65,61 @@
                     <tr style="background-color: #ccffff;">
                 </c:otherwise>
             </c:choose>
-            <td align="center">${a.productID}</td>
-            <td align="left">${a.productName}</td>
+            <td align="center" id="foodId" name="foodId">${a.foodId}</td>
+            <td align="left">${a.foodName}</td>
             <td align="left">
-                ${fn:substring(a.productDescription, 0, 200)}...
+                ${fn:substring(a.foodDescription, 0, 200)}...
             </td>
-            <td align="center"><img src="${a.imageURL}" alt="Smiley face" height="100" width="100"></td>
+            <td align="center"><img src="${a.foodimageURL}" alt="Smiley face" height="100" width="100"></td>
             <td align="center">
-                <fmt:formatNumber value="${a.productPrice}" type="currency"/>
+                <fmt:formatNumber value="${a.foodPrice}" type="currency"/>
             </td>
             <td align="center">
-                <form id="formDelete" method="POST" action="FoodItemController?action=delete&Id=${a.productID}">
+                <sec:authorize access="hasAnyRole('ROLE_MGR')">
+<!--                    <button class="btn btn-primary btn-xs" id="btnDelete" name="Update" type="button" value="Delete" style="padding: 5px 10px;">Delete</button>-->
+                    
+                <form id="formDelete" method="POST" action="FoodItemController?action=delete&Id=${a.foodId}">
                     <input class="btn btn-primary btn-xs" type="submit" name="delete" value="Delete" style="padding: 5px 10px;"/> 
                 </form>
+                </sec:authorize>
             </td>
              <td align="center">
-                <form id="formUpdate" method="POST" action="FoodItemController?action=update&Id=${a.productID}">
+                 <sec:authorize access="hasAnyRole('ROLE_MGR')">
+                <form id="formUpdate" method="POST" action="FoodItemController?action=update&Id=${a.foodId}">
                 <input class="btn btn-primary btn-xs" type="submit" name="update" value="Update" style="padding: 5px 10px;"}/> 
-                </form>
+                </form> 
+                </sec:authorize>
             </td>
+            
             <td align="center">
-                  <form id="formInventory" method="POST" action="FoodItemController?action=updateInventory&Id=${a.productID}">  
+                  <form id="formInventory" method="POST" action="FoodItemController?action=updateInventory&Id=${a.foodId}">  
                   <div class="center">
                         <p>
                           </p><div class="input-group">
                               <span class="input-group-btn">
-                                  <button type="button" class="btn btn-danger btn-number"  data-type="minus" data-field="${a.productID}inventory">
+                                  <button type="button" class="btn btn-danger btn-number"  data-type="minus" data-field="${a.foodId}inventory">
                                     <span class="glyphicon glyphicon-minus"></span>
                                   </button>
                               </span>
-                              <input type="text" name="${a.productID}inventory" class="form-control input-number" value="${a.productInventory}" min="1" max="100"
-                                     action="FoodItemController?action=updateInventory&Id=${a.productID}">
+                              <input type="text" name="${a.foodId}inventory" class="form-control input-number" value="${a.foodInventory}" min="1" max="100"
+                                     action="FoodItemController?action=updateInventory&Id=${a.foodId}">
                                      <span class="input-group-btn">
-                                  <button type="button" class="btn btn-success btn-number" data-type="plus"  data-field="${a.productID}inventory">
-                                      
+                                  
+                                  <button type="button" class="btn btn-success btn-number" data-type="plus"  data-field="${a.foodId}inventory">
+                                  
                                       <span class="glyphicon glyphicon-plus"></span>
                                   </button>
+                                   
                               </span>
                           </div>
                                   <br>
-                              <!--<form id="formInventory" method="POST" action="FoodItemController?action=updateInventory&Id=${a.productID}">-->    
-                                <input class="btn btn-primary btn-xs" type="submit" name="update" value="Confirm Inventory Change"}/>
+                              <!--<form id="formInventory" method="POST" action="FoodItemController?action=updateInventory&Id=${a.foodId}">-->    
+                                <sec:authorize access="hasAnyRole('ROLE_MGR, ROLE_USER')">
+                                  <input class="btn btn-primary btn-xs" type="submit" name="update" value="Confirm Inventory Change"}/>
+                                </sec:authorize>  
                             <p></p>
                             </form>
-                    </div>                      
-<!--                    <input type="number" name="inventory" min="1" max="200" value="${a.productInventory}">
-                    <input class="btn btn-primary btn-xs" type="submit" name="update" value="Confirm Inventory Change"}/>-->
+                    </div>                                        
                 
                 </form>
             </td>
@@ -112,11 +128,17 @@
         </tr>
         </c:forEach>
         </table>
-        
-        
                 
+                <br>
                 
+        <a class="btn btn-primary" href="index.html"/>Back</a> 
         
+        <br>
+        <sec:authorize access="hasAnyRole('ROLE_MGR','ROLE_USER')">
+            Logged in as: <sec:authentication property="principal.username"></sec:authentication> ::
+            <a href='<%= this.getServletContext().getContextPath() + "/j_spring_security_logout"%>'>Log Me Out</a>
+        </sec:authorize> 
+                
         <c:if test="${errMsg != null}">
             <p style="font-weight: bold;color: red;width:500px;">Sorry, data could not be retrieved:<br>
                 ${errMsg}</p>
@@ -126,5 +148,6 @@
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
       <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
       <script src="js/numberInput.js"></script>
+      <script src="js/app.js" type="text/javascript"></script>
     </body>
 </html>

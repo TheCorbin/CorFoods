@@ -5,37 +5,35 @@
 	 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
 	 version="3.1">
     
+<!--     Begin Spring-specific configuration -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+    
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+    </listener>
+     <!--END Spring configuration--> 
+    
+      <!--begin additional Spring Security config--> 
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+    
+    
      <context-param>
         <param-name>email</param-name>
         <param-value>ryanjcorbin@gmail.com</param-value>
-    </context-param>
-    <context-param>
-        <param-name>dataSource</param-name>
-        <param-value>jdbc/corFoods</param-value>
-    </context-param>
-    <context-param>
-        <param-name>driverClass</param-name>
-        <param-value>com.mysql.jdbc.Driver</param-value>
-    </context-param>
-    <context-param>
-        <param-name>foodItemDAO</param-name>
-        <param-value>edu.wctc.rjc.corfoods.model.ConnPoolFoodItemDAO</param-value>
-    </context-param>
-    <context-param>
-        <param-name>url</param-name>
-        <param-value>jdbc:mysql://localhost:3306/corFoods</param-value>
-    </context-param>
-    <context-param>
-        <param-name>userName</param-name>
-        <param-value>root</param-value>
-    </context-param>
-    <context-param>
-        <param-name>password</param-name>
-        <param-value>adminC</param-value>
-    </context-param>
-    <context-param>
-        <param-name>dbStrategy</param-name>
-        <param-value>edu.wctc.rjc.corfoods.model.MySqlDbStrategy</param-value>
     </context-param>
     
     <servlet>
@@ -48,10 +46,42 @@
         <url-pattern>/FoodItemController</url-pattern>
     </servlet-mapping>
     
+     <servlet>
+        <servlet-name>OrderController</servlet-name>
+        <servlet-class>edu.wctc.rjc.corfoods.controller.OrderController</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>OrderController</servlet-name>
+        <url-pattern>/OrderController</url-pattern>
+    </servlet-mapping>
+    
+     <servlet>
+        <servlet-name>UserController</servlet-name>
+        <servlet-class>edu.wctc.rjc.corfoods.controller.UserController</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserController</servlet-name>
+        <url-pattern>/UserController</url-pattern>
+    </servlet-mapping>
+    
+<!--     Add for Spring REST 
+    <servlet>
+        <servlet-name>exporter</servlet-name>
+        <servlet-class>org.springframework.data.rest.webmvc.RepositoryRestDispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>exporter</servlet-name>
+        <url-pattern>/api/v1/*</url-pattern>
+    </servlet-mapping>
+     end spring rest -->
+    
     <listener>
         <listener-class>edu.wctc.rjc.corfoods.listener.MySessionCounter</listener-class>
     </listener>
-    
     
     <session-config>
         <session-timeout>

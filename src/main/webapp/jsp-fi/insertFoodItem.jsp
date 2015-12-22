@@ -5,6 +5,10 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -32,6 +36,7 @@
         </div>
             <br>
         <form id="form1" name="form1" Method="POST" action="FoodItemController?action=insertFinal">
+             <sec:authorize access="hasAnyRole('ROLE_MGR')">
             <fieldset>
                     <p>
                         <label for="foodItemName"> Food Item Name<Span> (Required, more than two characters)</span></label>
@@ -55,10 +60,18 @@
                     <input class="btn btn-primary" type="submit" name="submit" value="Insert" style="margin: 10px 0px 10px 0px;"/>
             </fieldset>
             <br>
+            </sec:authorize>
         </form>
         <form id="form2" name="form1" Method="POST" action="FoodItemController?action=cancel">
             <input class="btn btn-primary" type="submit" name="submit" value="Cancel" style="margin: 10px 0px 10px 0px;"/>
         </form> 
+            
+        
+            
+        <sec:authorize access="hasAnyRole('ROLE_MGR','ROLE_USER')">
+            Logged in as: <sec:authentication property="principal.username"></sec:authentication> ::
+            <a href='<%= this.getServletContext().getContextPath() + "/j_spring_security_logout"%>'>Log Me Out</a>
+        </sec:authorize> 
         </div>  
         
         <script>

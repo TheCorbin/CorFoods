@@ -17,9 +17,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.servlet.RequestDispatcher;
@@ -31,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
+import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -39,16 +37,16 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * @author ryancorbin
  */
 
-public class FoodItemController extends HttpServlet {
+public class UserController extends HttpServlet {
     
 //    @Inject
 //    private FoodItemFacade foodsService;
 
 
     private static final String NO_PARAM_ERR_MSG = "No request parameter identified";
-    private static final String LIST_PAGE = "/jsp-fi/listFoodItems.jsp";
-    private static final String UPDATE_PAGE = "/jsp-fi/updateFoodItem.jsp";
-    private static final String INSERT_PAGE = "/jsp-fi/insertFoodItem.jsp";
+    private static final String LIST_PAGE = "/jsp-u/listUser.jsp";
+    private static final String UPDATE_PAGE = "/jsp-u/updateUser.jsp";
+    private static final String INSERT_PAGE = "/jsp-u/insertUser.jsp";
     private static final String ABOUT_PAGE = "about.jsp";
     private static final String INDEX_PAGE = "/index.html";
     private static final String LIST_ACTION = "list";
@@ -58,21 +56,18 @@ public class FoodItemController extends HttpServlet {
     private static final String INSERT_ACTION = "insert";
     private static final String ACTION_PARAM = "action";
     private static final String USER_PARAM = "userName";
-    private static final String CURRENCY_PARAM = "currency";
     private static final String UPDATE_FINAL_ACTION = "updateFinal";
     private static final String INSERT_FINAL_ACTION = "insertFinal";
     private static final String UPDATE_INVENTORY_ACTION = "updateInventory"; 
     private static final String CANCEL_ACTION = "cancel";
-    private static final String AJAX_LIST_ACTION = "listAjax";
-    private static final String POUND_CURRENCY = "pound";
-    private static final String ID_PARAM = "foodId";
     
     private static final String ID = "Id";
-    private static final String foodId = "foodItemID";
-    private static final String foodName = "foodItemName";
-    private static final String foodDescription = "foodItemDescription";
-    private static final String foodURL = "foodItemURL";
-    private static final String foodPrice = "foodItemPrice";
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String ENABLED = "enabled";
+    private static final String LASTUPDATE = "lastUpdate";
+    private static final String VERSION = "version";
+    
     
     private MySessionCounter sessionCounter = new MySessionCounter();
 //    private DBStrategy db;
@@ -91,7 +86,6 @@ public class FoodItemController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        String currency = request.getParameter(CURRENCY_PARAM);
         String action = request.getParameter(ACTION_PARAM);
         String user = request.getParameter(USER_PARAM);
         String destination = LIST_PAGE;
@@ -99,65 +93,40 @@ public class FoodItemController extends HttpServlet {
         HttpSession session = request.getSession();
         ServletContext ctx = request.getServletContext();
         WebApplicationContext wctx = WebApplicationContextUtils.getWebApplicationContext(ctx);
-        FoodItemService foodService = (FoodItemService) wctx.getBean("foodItemService");
-        PrintWriter out = response.getWriter();
+        UserService userService = (UserService) wctx.getBean("userService");
+        
         
         ctx.setAttribute("sessions", sessionCounter.getActiveSessions());
-        String foodId = request.getParameter(ID_PARAM);
         
-//        if (user != null){ 
-//            session.setAttribute("user", user);
-//        }
         
-        String foodItemId = request.getParameter(ID_PARAM);
-        FoodItem food = null;
+        if (user != null){ 
+            session.setAttribute("user", user);
+        }
+        
+        User tempUser = null;
         
         try {
             
             
             switch (action){
-                case AJAX_LIST_ACTION:
-                    List<FoodItem> foodItems = foodService.findAll();
-                    JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-
-                    foodItems.forEach((foodItemObj) -> {
-                        jsonArrayBuilder.add(
-                                Json.createObjectBuilder()
-                                .add("foodId", foodItemObj.getFoodId())
-                                .add("foodName", foodItemObj.getFoodName())
-                        );
-                    });
-
-                    JsonArray foodItemsJson = jsonArrayBuilder.build();
-                    response.setContentType("application/json");
-                    out.write(foodItemsJson.toString());
-                    out.flush();
-                    return; // must not continue at bottom!
                 case LIST_ACTION:
-                    this.refreshList(request, foodService);
+                    this.refreshList(request, userService);
                     destination = LIST_PAGE;
                     break;
                 case DELETE_ACTION:
-//                    PrintWriter outd = response.getWriter();
-//                    foodService.deleteById(Integer.valueOf(foodItemId));
-//                    response.setContentType("application/json; charset=UTF-8");
-//                    response.setStatus(200);
-//                    outd.write("{\"success\":\"true\"}");
-//                    outd.flush();
-//                    
-                    String foodItemID = request.getParameter(ID);
-                    FoodItem tempFoodItem = foodService.findById(foodItemID);
-                    foodService.remove(tempFoodItem);
+                    String Id = request.getParameter(ID);
+                    tempUser = userService.findById(Id);
+                    userService.remove(tempUser);
                     //Reload page without deleted author
-                    this.refreshList(request, foodService);
+                    this.refreshList(request, userService);
                     destination = LIST_PAGE;
                     break;
                 case ADD_ACTION:
                     break;
                 case UPDATE_ACTION:
-                    String foodItemIDU = request.getParameter(ID);
-                    FoodItem foodItemAlt = foodService.findById(foodItemIDU);
-                    request.setAttribute("foodItem", foodItemAlt);
+                    String userNameU = request.getParameter(USERNAME);
+                    User userAlt = userService.findById(userNameU);
+                    request.setAttribute("user", userAlt);
                     destination = UPDATE_PAGE; 
                     break;
                 case INSERT_ACTION:
@@ -167,48 +136,38 @@ public class FoodItemController extends HttpServlet {
                     destination = INSERT_PAGE;
                     break;
                 case INSERT_FINAL_ACTION:
-                    String foodNameTemp = request.getParameter(foodName);
-                    String foodDescriptionTemp = request.getParameter(foodDescription);
-                    String imgURL = request.getParameter(foodURL);
-                    Float price = Float.parseFloat(request.getParameter(foodPrice));
-                    food = new FoodItem();
-                    food.setFoodName(foodNameTemp);
-                    food.setFoodDescription(foodDescriptionTemp);
-                    food.setFoodimageURL(imgURL);
-                    food.setFoodPrice(price);
-                    foodService.edit(food);
-                    this.refreshList(request, foodService);
+                    String userNameI = request.getParameter(USERNAME);
+                    String passwordI = request.getParameter(PASSWORD);
+                    Boolean enabledI = Boolean.parseBoolean(request.getParameter(ENABLED));
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd");
+                    Date lastUpdateI = formatter.parse(LASTUPDATE);
+                    Integer versionI = Integer.parseInt(request.getParameter(VERSION));
+                    tempUser = new User();
+                    tempUser.setUsername(userNameI);
+                    tempUser.setPassword(passwordI);
+                    tempUser.setEnabled(enabledI);
+                    tempUser.setLastUpdate(lastUpdateI);
+                    tempUser.setVersion(versionI);
+                    userService.edit(tempUser);
+                    this.refreshList(request, userService);
                     destination = LIST_PAGE; 
                     break;
                 case UPDATE_FINAL_ACTION:
-                    List colValuesU = new ArrayList();
-                    Integer foodIDU = Integer.parseInt(request.getParameter(foodId));
-                    String foodNameU = request.getParameter(foodName);
-                    String foodDescriptionU = request.getParameter(foodDescription);
-                    String imgURLU = request.getParameter(foodURL);
-                    Float priceU = Float.parseFloat(request.getParameter(foodPrice));
-                    food = new FoodItem();
-                    food.setFoodId(foodIDU);
-                    food.setFoodName(foodNameU);
-                    food.setFoodDescription(foodDescriptionU);
-                    food.setFoodimageURL(imgURLU);
-                    food.setFoodPrice(priceU);
-                    foodService.edit(food);
-                    this.refreshList(request, foodService);
+                    String UserNameU = request.getParameter(USERNAME);
+                    String PasswordU = request.getParameter(PASSWORD);
+                    Boolean EnabledU = Boolean.parseBoolean(request.getParameter(LASTUPDATE));
+                    Integer VersionU = Integer.parseInt(request.getParameter(VERSION));
+                    tempUser = new User();
+                    tempUser.setUsername(UserNameU);
+                    tempUser.setPassword(PasswordU);
+                    tempUser.setEnabled(EnabledU);
+                    tempUser.setVersion(VersionU);
+                    userService.edit(tempUser);
+                    this.refreshList(request, userService);
                     destination = LIST_PAGE; 
                     break;
-                case UPDATE_INVENTORY_ACTION:
-                    String inventoryid = request.getParameter(ID);
-                    Integer inventory = Integer.parseInt(request.getParameter(inventoryid + "inventory"));
-                    food = foodService.findById(inventoryid);
-                    food.setFoodInventory(inventory);
-                    foodService.edit(food);
-                    this.refreshList(request, foodService);
-                    destination = LIST_PAGE; 
-                    break;
-                    
                 case CANCEL_ACTION:
-                    this.refreshList(request, foodService);
+                    this.refreshList(request, userService);
                     destination = LIST_PAGE; 
                     break;
                 default:
@@ -225,13 +184,23 @@ public class FoodItemController extends HttpServlet {
            
     }
     
-    private void refreshList(HttpServletRequest request, FoodItemService foodService) throws Exception {
-        List<FoodItem> foods = foodService.findAll();
-        request.setAttribute("foods", foods);
+    private void refreshList(HttpServletRequest request, UserService userService) throws Exception {
+        List<User> users = userService.findAll();
+        request.setAttribute("users", users);
+    }
+    
+    public static String sha512(String pwd, String salt) {
+
+            ShaPasswordEncoder pe = new ShaPasswordEncoder(512);
+            pe.setIterations(1024);
+            String hash = pe.encodePassword(pwd, salt);
+
+            return hash;
     }
     
     @Override
     public void init() throws ServletException {
+       
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

@@ -5,6 +5,10 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -32,47 +36,54 @@
         <h1 id="title">Update A Food Item</h1>
         
         <form id="form1" name="form1" Method="POST" action="FoodItemController?action=updateFinal">
+            <sec:authorize access="hasAnyRole('ROLE_MGR')">
             <fieldset>
                     <p>
-                        <label for="foodItemID">Food Item ID<span> ${foodItem.productID}</span></label>
+                        <label for="foodItemID">Food Item ID<span> ${foodItem.foodId}</span></label>
                         <br>
-                        <input hidden="productID" name="foodItemID" value="${foodItem.productID}" required>
+                        <input hidden="productID" name="foodItemID" value="${foodItem.foodId}" required>
                     </p>
                     
                     
                     <p>
                         <label for="foodItemID">Food Item Name<span>(Required, more than two characters)</span></label>
                         <br>
-                        <input id="foodItemName" name="foodItemName" value="${foodItem.productName}" type="text" required/>
+                        <input id="foodItemName" name="foodItemName" value="${foodItem.foodName}" type="text" required/>
                     </p>
                     
                     <p>
                         <label for="foodItemDescription">Food Description<span>(Required)</span></label>
                         <br>
-                        <input id="foodItemDescription" name="foodItemDescription" value="${foodItem.productDescription}" type="text" required/>
+                        <input id="foodItemDescription" name="foodItemDescription" value="${foodItem.foodDescription}" type="text" required/>
                     </p>
                     
                     <p>
                         <label for="foodItemURL">Food Item Image URL<span>(Required, URL Format (ex: http://www...))</span></label>
                         <br>
-                        <input id="foodItemURL" name="foodItemURL" value="${foodItem.imageURL}" type="url" required/>
+                        <input id="foodItemURL" name="foodItemURL" value="${foodItem.foodimageURL}" type="url" required/>
                     </p>
                     
                    <p>
                         <label for="foodItemPrice">Food Item Price<span>(Required)</span></label>
                         <br>
-                        <input id="foodItemPrice" name="foodItemPrice" value="${foodItem.productPrice}" number="true" required/>
+                        <input id="foodItemPrice" name="foodItemPrice" value="${foodItem.foodPrice}" number="true" required/>
                     </p>
           
                     <br>
                     <input class="btn btn-primary" type="submit" name="submit" value="Update"  style="margin: 10px 0px 10px 0px;"/>
              </fieldset>
             <br>
+            </sec:authorize>
         </form>
         <form id="form2" name="form1" Method="POST" action="FoodItemController?action=cancel">
             <input class="btn btn-primary" type="submit" name="submit" value="Cancel" style="margin: 10px 0px 10px 0px;"/>
         </form> 
-        </div>            
+         <sec:authorize access="hasAnyRole('ROLE_MGR','ROLE_USER')">
+            Logged in as: <sec:authentication property="principal.username"></sec:authentication> ::
+            <a href='<%= this.getServletContext().getContextPath() + "/j_spring_security_logout"%>'>Log Me Out</a>
+        </sec:authorize> 
+        </div>   
+            
                     
         <script>
          $('#form1').validate();  
